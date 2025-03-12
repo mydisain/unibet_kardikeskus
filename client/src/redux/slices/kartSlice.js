@@ -6,7 +6,7 @@ export const getKarts = createAsyncThunk(
   'karts/getKarts',
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get('/api/karts');
+      const { data } = await axios.get('https://adminunibet.bookid.ee/api/karts');
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -33,7 +33,7 @@ export const getKartsAdmin = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.get('/api/karts/admin/all', config);
+      const { data } = await axios.get('https://adminunibet.bookid.ee/api/karts/admin/all', config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -94,7 +94,7 @@ export const createKart = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.post('/api/karts', kartData, config);
+      const { data } = await axios.post('https://adminunibet.bookid.ee/api/karts', kartData, config);
       return data;
     } catch (error) {
       console.error('Create kart error:', error.response?.data || error.message);

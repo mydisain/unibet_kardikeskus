@@ -29,7 +29,7 @@ export const createBooking = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.post('/api/bookings', bookingData, config);
+      const { data } = await axios.post('https://adminunibet.bookid.ee/api/bookings', bookingData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -57,7 +57,7 @@ export const getBookings = createAsyncThunk(
         params,
       };
 
-      const { data } = await axios.get('/api/bookings', config);
+      const { data } = await axios.get('https://adminunibet.bookid.ee/api/bookings', config);
       return data;
     } catch (error) {
       return rejectWithValue(
