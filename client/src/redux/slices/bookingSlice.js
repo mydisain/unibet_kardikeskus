@@ -6,7 +6,7 @@ export const getAvailableTimeslots = createAsyncThunk(
   'bookings/getAvailableTimeslots',
   async (date, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`/api/bookings/timeslots?date=${date}`);
+      const { data } = await axios.get(`https://adminunibet.bookid.ee/api/bookings/timeslots?date=${date}`);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -84,7 +84,7 @@ export const getBookingById = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.get(`/api/bookings/${id}`, config);
+      const { data } = await axios.get(`https://adminunibet.bookid.ee/api/bookings/${id}`, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -112,7 +112,7 @@ export const updateBooking = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.put(`/api/bookings/${id}`, bookingData, config);
+      const { data } = await axios.put(`https://adminunibet.bookid.ee/api/bookings/${id}`, bookingData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -139,7 +139,7 @@ export const deleteBooking = createAsyncThunk(
         },
       };
 
-      await axios.delete(`/api/bookings/${id}`, config);
+      await axios.delete(`https://adminunibet.bookid.ee/api/bookings/${id}`, config);
       return id;
     } catch (error) {
       return rejectWithValue(

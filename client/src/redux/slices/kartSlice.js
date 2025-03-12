@@ -152,7 +152,7 @@ export const updateKart = createAsyncThunk(
 
       console.log(`Making PUT request to /api/karts/${id}`, { kartData, authHeader: config.headers.Authorization.substring(0, 20) + '...' });
       
-      const { data } = await axios.put(`/api/karts/${id}`, kartData, config);
+      const { data } = await axios.put(`https://adminunibet.bookid.ee/api/karts/${id}`, kartData, config);
       console.log('Kart updated successfully:', data);
       return data;
     } catch (error) {
@@ -181,7 +181,7 @@ export const deleteKart = createAsyncThunk(
         },
       };
 
-      await axios.delete(`/api/karts/${id}`, config);
+      await axios.delete(`https://adminunibet.bookid.ee/api/karts/${id}`, config);
       return id;
     } catch (error) {
       return rejectWithValue(

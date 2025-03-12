@@ -89,7 +89,7 @@ export const updateKartType = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.put(`/api/kart-types/${id}`, kartTypeData, config);
+      const { data } = await axios.put(`https://adminunibet.bookid.ee/api/kart-types/${id}`, kartTypeData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -116,7 +116,7 @@ export const deleteKartType = createAsyncThunk(
         },
       };
 
-      await axios.delete(`/api/kart-types/${id}`, config);
+      await axios.delete(`https://adminunibet.bookid.ee/api/kart-types/${id}`, config);
       return id;
     } catch (error) {
       return rejectWithValue(

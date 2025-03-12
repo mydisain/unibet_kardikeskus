@@ -123,7 +123,7 @@ export const updateEmailTemplate = createAsyncThunk(
       };
 
       const { data } = await axios.put(
-        `/api/settings/email-templates/${type}`,
+        `https://adminunibet.bookid.ee/api/settings/email-templates/${type}`,
         templateData,
         config
       );
