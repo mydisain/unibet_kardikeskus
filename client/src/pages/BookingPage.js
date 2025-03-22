@@ -267,7 +267,7 @@ const BookingPage = () => {
     }
   };
   
-  const handleQuantityChange = (kartId, newQuantity) => {
+  const handleQuantityChange = (kartId, newQuantity, totalAvailability) => {
     // Calculate the total quantity of all karts after this change
     const otherKartsQuantity = Object.entries(kartQuantities)
       .filter(([id]) => id !== kartId)
@@ -276,10 +276,10 @@ const BookingPage = () => {
     const totalAfterChange = otherKartsQuantity + newQuantity;
     
     // Check if the new total would exceed the maximum allowed
-    if (totalAfterChange <= (settings?.maxKartsPerTimeslot || 5)) {
+    if (totalAfterChange <= (totalAvailability || 5)) {
       setKartQuantities(prev => ({ ...prev, [kartId]: newQuantity }));
     } else {
-      alert(t('maximum_karts_reached', { max: settings?.maxKartsPerTimeslot || 5 }));
+      alert(t('maximum_karts_reached', { max: totalAvailability || 5 }));
     }
   };
   
@@ -574,7 +574,7 @@ const BookingPage = () => {
                                       e.stopPropagation();
                                       // If kart is selected and quantity > 1, decrease quantity
                                       if (selectedKarts.includes(kart._id) && kartQuantities[kart._id] > 1) {
-                                        handleQuantityChange(kart._id, kartQuantities[kart._id] - 1);
+                                        handleQuantityChange(kart._id, kartQuantities[kart._id] - 1, timeslotObj.totalAvailability);
                                       } else if (selectedKarts.includes(kart._id) && kartQuantities[kart._id] === 1) {
                                         // If quantity is 1, deselect the kart
                                         handleKartSelect(kart._id, false);
@@ -600,7 +600,7 @@ const BookingPage = () => {
                                       } 
                                       // If kart is already selected, increase quantity if possible
                                       else if (kartQuantities[kart._id] < maxAvailable) {
-                                        handleQuantityChange(kart._id, kartQuantities[kart._id] + 1);
+                                        handleQuantityChange(kart._id, kartQuantities[kart._id] + 1, timeslotObj.totalAvailability);
                                       }
                                     }}
                                     disabled={selectedKarts.includes(kart._id) && kartQuantities[kart._id] >= Math.min(availableQuantity, kart.quantity || 1) || availableQuantity <= 0}
