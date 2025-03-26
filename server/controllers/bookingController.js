@@ -207,7 +207,7 @@ const getAvailableTimeslots = asyncHandler(async (req, res) => {
   
   // Get settings
   const setting = await Setting.getSetting();
-  const { timeslotDuration } = setting;
+  const { timeslotDuration, maxKartsPerTimeslot } = setting;
   
   // Get working hours for the day
   const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestDateObj.getDay()];
@@ -279,12 +279,14 @@ const getAvailableTimeslots = asyncHandler(async (req, res) => {
         type: kart.type,
         pricePerSlot: kart.pricePerSlot,
         available: Math.max(0, kart.quantity - bookedQuantity),
+        booked: bookedQuantity,
         total: kart.quantity,
       };
     });
     
     // Calculate total available places for this timeslot
-    const totalAvailability = kartAvailability.reduce((total, kart) => total + kart.available, 0);
+    const totalBooked = kartAvailability.reduce((total, kart) => total + kart.booked, 0);
+    const totalAvailability = maxKartsPerTimeslot - totalBooked;
     
     return {
       ...timeslot,
