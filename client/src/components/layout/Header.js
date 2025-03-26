@@ -46,6 +46,7 @@ const Header = () => {
           </Typography>
 
           {/* Admin button removed as users don't need admin rights to make bookings */}
+          <RouterLink to="/admin/login">Admin Login</RouterLink>
         </Toolbar>
       </Container>
     </AppBar>

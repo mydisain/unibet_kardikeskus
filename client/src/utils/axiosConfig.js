@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create Axios instance
 const axiosInstance = axios.create({
-  baseURL: 'https://adminunibet.bookid.ee/', // Make sure this matches your backend URL
+  baseURL: process.env.REACT_APP_API_URL, // Make sure this matches your backend URL
 });
 
 // Request interceptor for API calls

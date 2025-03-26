@@ -6,7 +6,7 @@ export const getKarts = createAsyncThunk(
   'karts/getKarts',
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get('https://adminunibet.bookid.ee/api/karts');
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/karts`);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -33,7 +33,7 @@ export const getKartsAdmin = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.get('https://adminunibet.bookid.ee/api/karts/admin/all', config);
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/karts/admin/all`, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -94,7 +94,7 @@ export const createKart = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.post('https://adminunibet.bookid.ee/api/karts', kartData, config);
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}api/karts`, kartData, config);
       return data;
     } catch (error) {
       console.error('Create kart error:', error.response?.data || error.message);
@@ -152,7 +152,7 @@ export const updateKart = createAsyncThunk(
 
       console.log(`Making PUT request to /api/karts/${id}`, { kartData, authHeader: config.headers.Authorization.substring(0, 20) + '...' });
       
-      const { data } = await axios.put(`https://adminunibet.bookid.ee/api/karts/${id}`, kartData, config);
+      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}api/karts/${id}`, kartData, config);
       console.log('Kart updated successfully:', data);
       return data;
     } catch (error) {
@@ -181,7 +181,7 @@ export const deleteKart = createAsyncThunk(
         },
       };
 
-      await axios.delete(`https://adminunibet.bookid.ee/api/karts/${id}`, config);
+      await axios.delete(`${process.env.REACT_APP_API_URL}api/karts/${id}`, config);
       return id;
     } catch (error) {
       return rejectWithValue(

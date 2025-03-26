@@ -254,10 +254,14 @@ const getAvailableTimeslots = asyncHandler(async (req, res) => {
     
     // Find bookings that overlap with this timeslot
     const overlappingBookings = bookings.filter(booking => {
-      return (
-        (booking.startTime <= startTime && booking.endTime > startTime) ||
-        (booking.startTime < addMinutesToTime(startTime, timeslotDuration) && booking.startTime >= startTime)
-      );
+      return booking.selectedTimeslots.some(slot => 
+        slot.start <= startTime && slot.end > startTime
+      ) || (booking.startTime < addMinutesToTime(startTime, timeslotDuration) && booking.startTime >= startTime);
+
+      // return (
+      //   (booking.startTime <= startTime && booking.endTime > startTime) ||
+      //   (booking.startTime < addMinutesToTime(startTime, timeslotDuration) && booking.startTime >= startTime)
+      // );
     });
     
     // Calculate remaining kart quantities

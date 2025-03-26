@@ -51,7 +51,10 @@ const bookingSchema = mongoose.Schema(
       required: [true, 'Please add an end time'],
     },
     selectedTimeslots: {
-      type: [String],
+      type: [{
+        start: { type: String, required: true },
+        end: { type: String, required: true },
+      }],
       default: [],
     },
     duration: {

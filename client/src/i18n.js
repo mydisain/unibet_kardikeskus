@@ -510,7 +510,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'et', // Default language is Estonian
+    lng: 'en', // Default language is Estonian
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false, // React already escapes values

@@ -7,7 +7,7 @@ export const getSettings = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // Using the public endpoint that doesn't require authentication
-      const { data } = await axios.get('https://adminunibet.bookid.ee/api/settings/public');
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/settings/public`);
       console.log('Settings fetched successfully:', data);
       return data;
     } catch (error) {
@@ -37,7 +37,7 @@ export const updateSettings = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.put('https://adminunibet.bookid.ee/api/settings', settingsData, config);
+      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}api/settings`, settingsData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -65,7 +65,7 @@ export const addHoliday = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.post('https://adminunibet.bookid.ee/api/settings/holidays', holidayData, config);
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}api/settings/holidays`, holidayData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -94,7 +94,7 @@ export const removeHoliday = createAsyncThunk(
         data: { date },
       };
 
-      const { data } = await axios.delete('https://adminunibet.bookid.ee/api/settings/holidays', config);
+      const { data } = await axios.delete(`${process.env.REACT_APP_API_URL}api/settings/holidays`, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -123,7 +123,7 @@ export const updateEmailTemplate = createAsyncThunk(
       };
 
       const { data } = await axios.put(
-        `https://adminunibet.bookid.ee/api/settings/email-templates/${type}`,
+        `${process.env.REACT_APP_API_URL}api/settings/email-templates/${type}`,
         templateData,
         config
       );
@@ -155,7 +155,7 @@ export const testEmailConfiguration = createAsyncThunk(
       };
 
       const { data } = await axios.post(
-        'https://adminunibet.bookid.ee/api/settings/test-email',
+        `${process.env.REACT_APP_API_URL}api/settings/test-email`,
         { email },
         config
       );

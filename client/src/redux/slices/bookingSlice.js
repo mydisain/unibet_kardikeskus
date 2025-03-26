@@ -6,7 +6,7 @@ export const getAvailableTimeslots = createAsyncThunk(
   'bookings/getAvailableTimeslots',
   async (date, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`https://adminunibet.bookid.ee/api/bookings/timeslots?date=${date}`);
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/bookings/timeslots?date=${date}`);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -29,7 +29,7 @@ export const createBooking = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.post('https://adminunibet.bookid.ee/api/bookings', bookingData, config);
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}api/bookings`, bookingData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -57,7 +57,7 @@ export const getBookings = createAsyncThunk(
         params,
       };
 
-      const { data } = await axios.get('https://adminunibet.bookid.ee/api/bookings', config);
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/bookings`, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -84,7 +84,7 @@ export const getBookingById = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.get(`https://adminunibet.bookid.ee/api/bookings/${id}`, config);
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}api/bookings/${id}`, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -112,7 +112,7 @@ export const updateBooking = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.put(`https://adminunibet.bookid.ee/api/bookings/${id}`, bookingData, config);
+      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}api/bookings/${id}`, bookingData, config);
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -139,7 +139,7 @@ export const deleteBooking = createAsyncThunk(
         },
       };
 
-      await axios.delete(`https://adminunibet.bookid.ee/api/bookings/${id}`, config);
+      await axios.delete(`${process.env.REACT_APP_API_URL}api/bookings/${id}`, config);
       return id;
     } catch (error) {
       return rejectWithValue(

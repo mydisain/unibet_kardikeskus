@@ -144,8 +144,8 @@ const BookingPage = () => {
   const calculateTotalDuration = (timeslots) => {
     if (!timeslots || timeslots.length === 0) return 0;
     
-    return timeslots.reduce((total, timeslotStartTime) => {
-      const timeslot = availableTimeslots.find(t => t.startTime === timeslotStartTime);
+    return timeslots.reduce((total, item) => {
+      const timeslot = availableTimeslots.find(t => t.startTime === item.start);
       if (!timeslot) return total;
       
       // Calculate duration in minutes
@@ -186,15 +186,15 @@ const BookingPage = () => {
     return timeslotDate < now;
   };
   
-  const handleTimeslotSelect = (timeslot) => {
+  const handleTimeslotSelect = (timeslotStart, timeslotEnd) => {
     // Check if the timeslot is in the past
-    if (isTimeslotInPast(timeslot)) {
+    if (isTimeslotInPast(timeslotStart)) {
       alert(t('timeslot_in_past'));
       return;
     }
     
     // Check if adding this timeslot would exceed the maximum ride duration
-    const newSelectedTimeslots = [...selectedTimeslots, timeslot].sort();
+    const newSelectedTimeslots = [...selectedTimeslots, {start: timeslotStart, end: timeslotEnd}].sort();
     const totalDuration = calculateTotalDuration(newSelectedTimeslots);
     
     if (totalDuration > maxRideDuration) {
@@ -203,7 +203,7 @@ const BookingPage = () => {
     }
     
     // Set the current timeslot and open the dialog
-    setCurrentTimeslot(timeslot);
+    setCurrentTimeslot({start: timeslotStart, end: timeslotEnd});
     setKartDialogOpen(true);
   };
   
@@ -213,6 +213,7 @@ const BookingPage = () => {
   };
   
   const handleKartDialogConfirm = () => {
+    console.log(selectedTimeslots)
     if (currentTimeslot && selectedKarts.length > 0) {
       // If this is the first timeslot selection, save the initial kart selection
       if (selectedTimeslots.length === 0) {
@@ -283,57 +284,63 @@ const BookingPage = () => {
     }
   };
   
-  const handleSubmit = (values) => {
-    if (selectedTimeslots.length === 0) return;
-    
-    // Get the first and last timeslot to determine booking start and end time
-    const sortedTimeslots = [...selectedTimeslots].sort();
-    const firstTimeslotObj = availableTimeslots.find(t => t.startTime === sortedTimeslots[0]);
-    const lastTimeslotObj = availableTimeslots.find(t => t.startTime === sortedTimeslots[sortedTimeslots.length - 1]);
-    
-    if (!firstTimeslotObj || !lastTimeslotObj) return;
-    
-    // Create kartSelections array with proper format
-    const kartSelections = selectedKarts.map(kartId => {
-      const kart = karts.find(k => k._id === kartId);
-      return {
-        kart: kartId,
-        quantity: kartQuantities[kartId] || 1, // Use the selected quantity or default to 1
-        pricePerSlot: kart ? kart.pricePerSlot : 0
-      };
-    });
-    
-    // Calculate total duration
-    const totalDuration = calculateTotalDuration(selectedTimeslots);
-    
-    const bookingData = {
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      startTime: firstTimeslotObj.startTime,
-      endTime: lastTimeslotObj.endTime,
-      duration: totalDuration,
-      timeslots: selectedTimeslots, // Include all selected timeslots
-      kartSelections: kartSelections,
-      customerName: values.name,
-      customerEmail: values.email,
-      customerPhone: values.phone,
-      notes: values.notes,
-    };
-    
-    console.log('Sending booking data:', bookingData);
-    
-    dispatch(createBooking(bookingData))
-      .unwrap()
-      .then((result) => {
-        navigate('/confirmation', { 
-          state: { 
-            bookingId: result._id,
-            bookingData: result 
-          } 
-        });
-      })
-      .catch((error) => {
-        console.error('Booking failed:', error);
+  const handleSubmit = (values, {setSubmitting}) => {
+    try {
+      if (selectedTimeslots.length === 0) return;
+      
+      // Get the first and last timeslot to determine booking start and end time
+      const sortedTimeslots = [...selectedTimeslots].sort();
+      const firstTimeslotObj = availableTimeslots.find(t => t.startTime === sortedTimeslots[0].start);
+      const lastTimeslotObj = availableTimeslots.find(t => t.startTime === sortedTimeslots[sortedTimeslots.length - 1].start);
+      console.log(firstTimeslotObj, lastTimeslotObj)
+      if (!firstTimeslotObj || !lastTimeslotObj) return;
+      
+      // Create kartSelections array with proper format
+      const kartSelections = selectedKarts.map(kartId => {
+        const kart = karts.find(k => k._id === kartId);
+        return {
+          kart: kartId,
+          quantity: kartQuantities[kartId] || 1, // Use the selected quantity or default to 1
+          pricePerSlot: kart ? kart.pricePerSlot : 0
+        };
       });
+      
+      // Calculate total duration
+      const totalDuration = calculateTotalDuration(selectedTimeslots);
+      
+      const bookingData = {
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        startTime: firstTimeslotObj.startTime,
+        endTime: lastTimeslotObj.endTime,
+        duration: totalDuration,
+        timeslots: selectedTimeslots, // Include all selected timeslots
+        kartSelections: kartSelections,
+        customerName: values.name,
+        customerEmail: values.email,
+        customerPhone: values.phone,
+        notes: values.notes,
+      };
+      
+      console.log('Sending booking data:', bookingData);
+      
+      dispatch(createBooking(bookingData))
+        .unwrap()
+        .then((result) => {
+          navigate('/confirmation', { 
+            state: { 
+              bookingId: result._id,
+              bookingData: result 
+            } 
+          });
+        })
+        .catch((error) => {
+          console.error('Booking failed:', error);
+        });
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setSubmitting(false)
+    }
   };
   
   // Validation schema for customer details form
@@ -377,12 +384,12 @@ const BookingPage = () => {
             </Typography>
             <Paper sx={{ p: 2 }}>
               <Grid container spacing={2}>
-                {selectedTimeslots.map((timeslotStartTime) => {
-                  const timeslot = availableTimeslots.find(t => t.startTime === timeslotStartTime);
+                {selectedTimeslots.map((item) => {
+                  const timeslot = availableTimeslots.find(t => t.startTime === item.start);
                   if (!timeslot) return null;
                   
                   return (
-                    <Grid item xs={6} sm={4} md={3} key={timeslotStartTime}>
+                    <Grid item xs={6} sm={4} md={3} key={item.start}>
                       <Paper 
                         sx={{ 
                           p: 2, 
@@ -424,7 +431,7 @@ const BookingPage = () => {
           <Grid container spacing={2} sx={{ mt: 2 }}>
             {availableTimeslots && availableTimeslots.length > 0 ? (
               availableTimeslots.map((timeslot) => {
-                const isSelected = selectedTimeslots.includes(timeslot.startTime);
+                const isSelected = selectedTimeslots.some(slot => slot.start === timeslot.startTime);
                 const isPast = isTimeslotInPast(timeslot.startTime);
                 
                 return (
@@ -433,7 +440,7 @@ const BookingPage = () => {
                       fullWidth
                       variant={isSelected ? 'contained' : 'outlined'}
                       color={isPast ? 'error' : 'primary'}
-                      onClick={() => !isSelected && !isPast && handleTimeslotSelect(timeslot.startTime)}
+                      onClick={() => !isSelected && !isPast && handleTimeslotSelect(timeslot.startTime, timeslot.endTime)}
                       sx={{ 
                         py: 2,
                         display: 'flex',
@@ -498,7 +505,7 @@ const BookingPage = () => {
   // Kart selection dialog component as a memoized component
   const KartSelectionDialog = React.memo(() => {
     // Get the current timeslot object
-    const timeslotObj = currentTimeslot ? availableTimeslots.find(t => t.startTime === currentTimeslot) : null;
+    const timeslotObj = currentTimeslot ? availableTimeslots.find(t => t.startTime === currentTimeslot.start) : null;
     
     return (
       <Dialog
@@ -645,12 +652,12 @@ const BookingPage = () => {
         </Typography>
         
         <Grid container spacing={3}>
-          {selectedTimeslots.map((timeslotStartTime) => {
-            const timeslot = availableTimeslots.find(t => t.startTime === timeslotStartTime);
+          {selectedTimeslots.map((item) => {
+            const timeslot = availableTimeslots.find(t => t.startTime === item.start);
             if (!timeslot) return null;
             
             return (
-              <Grid item xs={12} key={timeslotStartTime}>
+              <Grid item xs={12} key={item.start}>
                 <Paper sx={{ p: 3 }}>
                   <Typography variant="h6">
                     {formatTimeslot(timeslot.startTime, timeslot.endTime)}
@@ -739,12 +746,12 @@ const BookingPage = () => {
           </Typography>
           
           <Grid container spacing={2}>
-            {selectedTimeslots.map((timeslotStartTime) => {
-              const timeslot = availableTimeslots.find(t => t.startTime === timeslotStartTime);
+            {selectedTimeslots.map((item) => {
+              const timeslot = availableTimeslots.find(t => t.startTime === item.start);
               if (!timeslot) return null;
               
               return (
-                <Grid item xs={12} sm={6} md={4} key={timeslotStartTime}>
+                <Grid item xs={12} sm={6} md={4} key={item.start}>
                   <Paper 
                     sx={{ 
                       p: 2, 

@@ -41,7 +41,7 @@ export const login = createAsyncThunk(
       };
 
       const { data } = await axios.post(
-        'https://adminunibet.bookid.ee/api/users/login',
+        `${process.env.REACT_APP_API_URL}api/users/login`,
         { email, password },
         config
       );
@@ -108,7 +108,7 @@ export const updateProfile = createAsyncThunk(
         },
       };
 
-      const { data } = await axios.put('https://adminunibet.bookid.ee/api/users/profile', user, config);
+      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}api/users/profile`, user, config);
 
       localStorage.setItem('userInfo', JSON.stringify(data));
 
