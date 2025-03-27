@@ -85,7 +85,7 @@ const ConfirmationPage = () => {
               </Box>
             </Box>
           </Grid>
-          
+                    
           <Grid item xs={12} sm={6}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <AccessTimeIcon sx={{ mr: 2, color: 'primary.main' }} />

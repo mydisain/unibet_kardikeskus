@@ -14,6 +14,9 @@ const resources = {
       saturday: 'Laupäev',
       sunday: 'Pühapäev',
       
+      return_home: 'Tagasi koju',
+      print_confirmation: 'Prindi kinnitus',
+      
       // Months
       january: 'Jaanuar',
       february: 'Veebruar',
@@ -263,6 +266,9 @@ const resources = {
       friday: 'Friday',
       saturday: 'Saturday',
       sunday: 'Sunday',
+
+      return_home: 'Return Home',
+      print_confirmation: 'Print Confirmation',
       
       // Months
       january: 'January',
@@ -510,8 +516,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', // Default language is Estonian
-    fallbackLng: 'en',
+    lng: 'et', // Default language is Estonian
+    fallbackLng: 'et',
     interpolation: {
       escapeValue: false, // React already escapes values
     },
