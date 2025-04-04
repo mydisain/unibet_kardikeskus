@@ -16,6 +16,10 @@ const kartSelectionSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    timeslot: {
+      type: String,
+      required: false,
+    },
   },
   { _id: false }
 );
@@ -59,6 +63,16 @@ const bookingSchema = mongoose.Schema(
       required: [true, 'Please add duration in minutes'],
     },
     kartSelections: [kartSelectionSchema],
+    timeslotKartSelections: {
+      type: Map,
+      of: [String],
+      default: {},
+    },
+    timeslotKartQuantities: {
+      type: Map,
+      of: Map,
+      default: {},
+    },
     totalPrice: {
       type: Number,
       required: true,

@@ -16,10 +16,18 @@ const createBooking = asyncHandler(async (req, res) => {
     startTime,
     endTime,
     duration,
-    timeslots,
+    selectedTimeslots,
     kartSelections,
+    timeslotKartSelections,
+    timeslotKartQuantities,
     notes,
   } = req.body;
+
+  console.log('Creating booking with the following data:');
+  console.log('Selected timeslots:', selectedTimeslots);
+  console.log('Kart selections:', kartSelections);
+  console.log('Timeslot kart selections:', timeslotKartSelections);
+  console.log('Timeslot kart quantities:', timeslotKartQuantities);
 
   // Get settings for timeslot duration
   const setting = await Setting.getSetting();
@@ -28,11 +36,11 @@ const createBooking = asyncHandler(async (req, res) => {
   // Calculate total price based on actual timeslot duration
   let totalPrice = 0;
   for (const selection of kartSelections) {
-    totalPrice += selection.quantity * selection.pricePerSlot * (duration / timeslotDuration);
+    totalPrice += selection.quantity * selection.pricePerSlot;
   }
   
   // Store the selected timeslots if provided
-  const selectedTimeslots = timeslots || [];
+  const bookingTimeslots = selectedTimeslots || [];
 
   const booking = await Booking.create({
     customerName,
@@ -42,8 +50,10 @@ const createBooking = asyncHandler(async (req, res) => {
     startTime,
     endTime,
     duration,
-    selectedTimeslots, // Store the selected timeslots
+    selectedTimeslots: bookingTimeslots, // Store the selected timeslots
     kartSelections,
+    timeslotKartSelections, // Store the timeslot-specific kart selections
+    timeslotKartQuantities, // Store the timeslot-specific kart quantities
     totalPrice,
     status: 'confirmed',
     notes,
@@ -230,14 +240,51 @@ const getAvailableTimeslots = asyncHandler(async (req, res) => {
   // Get all karts
   const karts = await Kart.find({ isActive: true });
   
-  // Get existing bookings for the date
-  const bookings = await Booking.find({
-    date: {
-      $gte: new Date(new Date(date).setHours(0, 0, 0)),
-      $lt: new Date(new Date(date).setHours(23, 59, 59)),
-    },
-    status: { $ne: 'cancelled' },
+  console.log('Querying bookings for date:', date);
+  
+  // Convert the date to a consistent format (YYYY-MM-DD)
+  const dateString = date.split('T')[0].split('?')[0]; // Handle both ISO format and query params
+  console.log('Normalized date string:', dateString);
+  
+  // Query all bookings and filter by date manually to ensure we catch all formats
+  const allBookings = await Booking.find({ status: { $ne: 'cancelled' } });
+  console.log(`Total active bookings in system: ${allBookings.length}`);
+  
+  // Filter bookings manually by comparing date strings
+  const bookings = allBookings.filter(booking => {
+    // Convert booking date to string for comparison
+    let bookingDateStr = '';
+    
+    if (booking.date instanceof Date) {
+      // If date is stored as Date object
+      bookingDateStr = booking.date.toISOString().split('T')[0];
+    } else if (typeof booking.date === 'string') {
+      // If date is stored as string
+      bookingDateStr = booking.date.split('T')[0];
+    } else {
+      // Unknown format
+      console.log(`Booking ${booking._id} has date in unknown format:`, booking.date);
+      return false;
+    }
+    
+    const matches = bookingDateStr === dateString;
+    if (matches) {
+      console.log(`Booking ${booking._id} matches date ${dateString} (${bookingDateStr})`);
+    }
+    return matches;
   });
+  
+  console.log(`Found ${bookings.length} bookings for date ${dateString} after manual filtering`);
+  if (bookings.length > 0) {
+    console.log('First booking:', JSON.stringify({
+      id: bookings[0]._id,
+      date: bookings[0].date,
+      startTime: bookings[0].startTime,
+      endTime: bookings[0].endTime,
+      selectedTimeslots: bookings[0].selectedTimeslots,
+      kartSelections: bookings[0].kartSelections
+    }, null, 2));
+  }
   
   // Get current time in HH:MM format if the requested date is today
   let currentTime = null;
@@ -254,38 +301,120 @@ const getAvailableTimeslots = asyncHandler(async (req, res) => {
     
     // Find bookings that overlap with this timeslot
     const overlappingBookings = bookings.filter(booking => {
-      return (
-        (booking.startTime <= startTime && booking.endTime > startTime) ||
-        (booking.startTime < addMinutesToTime(startTime, timeslotDuration) && booking.startTime >= startTime)
-      );
+      // Format the current timeslot for comparison
+      const timeslotStr = `${startTime}-${addMinutesToTime(startTime, timeslotDuration)}`;
+      
+      // Log all timeslots for debugging
+      console.log(`Checking timeslot ${timeslotStr} against booking ${booking._id}`);
+      
+      // ONLY check if this specific timeslot is in the booking's selectedTimeslots array
+      if (booking.selectedTimeslots && booking.selectedTimeslots.length > 0) {
+        console.log(`Booking ${booking._id} has selectedTimeslots:`, booking.selectedTimeslots);
+        
+        // Use the normalized comparison to check for matches
+        const isOverlapping = booking.selectedTimeslots.some(ts => {
+          // Normalize both timeslots for comparison
+          const normalizedBookingTimeslot = normalizeTimeslot(ts);
+          const normalizedCurrentTimeslot = normalizeTimeslot(timeslotStr);
+          
+          // Check for exact match with normalized format
+          const exactMatch = normalizedBookingTimeslot === normalizedCurrentTimeslot;
+          
+          // Check for start time match as fallback
+          const startTimeMatch = ts.split('-')[0].trim() === startTime;
+          
+          const matches = exactMatch || startTimeMatch;
+          if (matches) {
+            console.log(`Match found for timeslot ${timeslotStr}:`);
+            console.log(`  - Booking timeslot: ${ts}`);
+            console.log(`  - Normalized booking: ${normalizedBookingTimeslot}`);
+            console.log(`  - Normalized current: ${normalizedCurrentTimeslot}`);
+            console.log(`  - Exact match: ${exactMatch}, Start time match: ${startTimeMatch}`);
+          }
+          
+          return matches;
+        });
+        
+        return isOverlapping;
+      }
+      
+      // Legacy fallback for bookings without selectedTimeslots
+      const bookingStartTime = booking.startTime;
+      
+      // Simple overlap check for legacy bookings
+      const isOverlapping = (bookingStartTime === startTime);
+      if (isOverlapping) {
+        console.log(`Legacy booking ${booking._id} overlaps with timeslot ${startTime} (using startTime match)`);
+      }
+      return isOverlapping;
     });
+    
+    if (overlappingBookings.length > 0) {
+      console.log(`Found ${overlappingBookings.length} overlapping bookings for timeslot ${startTime}`);
+    }
     
     // Calculate remaining kart quantities
     const kartAvailability = karts.map(kart => {
       const bookedQuantity = overlappingBookings.reduce((total, booking) => {
-        const kartSelection = booking.kartSelections.find(
-          selection => selection.kart.toString() === kart._id.toString()
-        );
-        return total + (kartSelection ? kartSelection.quantity : 0);
+        // Format the current timeslot for comparison
+        const timeslotStr = `${startTime}-${addMinutesToTime(startTime, timeslotDuration)}`;
+        
+        // Find this kart in the booking's kartSelections, but only for this specific timeslot
+        const kartSelections = booking.kartSelections.filter(selection => {
+          // Check if this selection is for the current timeslot
+          if (selection.timeslot) {
+            // If the selection has a timeslot property, check if it matches the current timeslot
+            return normalizeTimeslot(selection.timeslot) === normalizeTimeslot(timeslotStr);
+          } else {
+            // Legacy bookings without timeslot-specific selections
+            return true;
+          }
+        });
+        
+        // Sum up quantities for this kart in this specific timeslot
+        const timeslotQuantity = kartSelections.reduce((sum, selection) => {
+          if (selection.kart && selection.kart.toString() === kart._id.toString()) {
+            return sum + selection.quantity;
+          }
+          return sum;
+        }, 0);
+        
+        if (timeslotQuantity > 0) {
+          console.log(`Kart ${kart.name} (${kart._id}) has ${timeslotQuantity} booked for timeslot ${startTime} in booking ${booking._id}`);
+        }
+        
+        return total + timeslotQuantity;
       }, 0);
+      
+      const available = Math.max(0, kart.quantity - bookedQuantity);
+      if (bookedQuantity > 0) {
+        console.log(`Kart ${kart.name}: total=${kart.quantity}, booked=${bookedQuantity}, available=${available}`);
+      }
       
       return {
         _id: kart._id,
         name: kart.name,
         type: kart.type,
         pricePerSlot: kart.pricePerSlot,
-        available: Math.max(0, kart.quantity - bookedQuantity),
+        available: available,
         total: kart.quantity,
+        booked: bookedQuantity // Add this for debugging
       };
     });
     
     // Calculate total available places for this timeslot
     const totalAvailability = kartAvailability.reduce((total, kart) => total + kart.available, 0);
+    const totalBooked = kartAvailability.reduce((total, kart) => total + kart.booked, 0);
+    const totalKarts = kartAvailability.reduce((total, kart) => total + kart.total, 0);
+    
+    console.log(`Timeslot ${startTime}: total=${totalKarts}, booked=${totalBooked}, available=${totalAvailability}`);
     
     return {
       ...timeslot,
       kartAvailability,
       totalAvailability,
+      totalBooked,
+      totalKarts
     };
   });
   
@@ -343,6 +472,17 @@ const compareTime = (time1, time2) => {
   }
   
   return mins1 - mins2;
+};
+
+// Helper function to normalize timeslot format for comparison
+const normalizeTimeslot = (timeslot) => {
+  // Remove spaces and ensure consistent format
+  return timeslot.replace(/\s+/g, '');
+};
+
+// Helper function to check if two timeslots match
+const timeslotsMatch = (timeslot1, timeslot2) => {
+  return normalizeTimeslot(timeslot1) === normalizeTimeslot(timeslot2);
 };
 
 // Helper function to send booking confirmation email

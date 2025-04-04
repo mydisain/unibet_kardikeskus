@@ -28,10 +28,19 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Card,
+  CardContent,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { format } from 'date-fns';
@@ -97,31 +106,41 @@ const BookingsPage = () => {
   };
   
   const handleUpdateBooking = (values) => {
-    // Implement when booking slice is ready
-    // dispatch(updateBooking({ id: selectedBooking._id, ...values }))
-    //   .unwrap()
-    //   .then(() => {
-    //     handleCloseEditDialog();
-    //   })
-    //   .catch((error) => {
-    //     console.error('Update booking failed:', error);
-    //   });
-    console.log('Update booking:', values);
-    handleCloseEditDialog();
+    if (selectedBooking && selectedBooking._id) {
+      dispatch(updateBooking({ id: selectedBooking._id, bookingData: values }))
+        .unwrap()
+        .then(() => {
+          handleCloseEditDialog();
+          // Show success message
+          alert(t('booking_updated_successfully', 'Booking updated successfully'));
+        })
+        .catch((error) => {
+          console.error('Update booking failed:', error);
+          // Show error message
+          alert(t('update_booking_failed', 'Failed to update booking'));
+        });
+    } else {
+      console.error('No booking selected for update');
+    }
   };
   
   const handleDeleteBooking = () => {
-    // Implement when booking slice is ready
-    // dispatch(deleteBooking(selectedBooking._id))
-    //   .unwrap()
-    //   .then(() => {
-    //     handleCloseDeleteConfirm();
-    //   })
-    //   .catch((error) => {
-    //     console.error('Delete booking failed:', error);
-    //   });
-    console.log('Delete booking:', selectedBooking?._id);
-    handleCloseDeleteConfirm();
+    if (selectedBooking && selectedBooking._id) {
+      dispatch(deleteBooking(selectedBooking._id))
+        .unwrap()
+        .then(() => {
+          handleCloseDeleteConfirm();
+          // Show success message
+          alert(t('booking_deleted_successfully', 'Booking deleted successfully'));
+        })
+        .catch((error) => {
+          console.error('Delete booking failed:', error);
+          // Show error message
+          alert(t('delete_booking_failed', 'Failed to delete booking'));
+        });
+    } else {
+      console.error('No booking selected for deletion');
+    }
   };
   
   const getStatusColor = (status) => {
@@ -283,44 +302,111 @@ const BookingsPage = () => {
                 <Typography variant="subtitle2">{t('date')}</Typography>
                 <Typography variant="body1" gutterBottom>{selectedBooking.date}</Typography>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2">{t('time')}</Typography>
-                <Typography variant="body1" gutterBottom>
-                  {selectedBooking.startTime && selectedBooking.endTime 
-                    ? `${selectedBooking.startTime} - ${selectedBooking.endTime}` 
-                    : selectedBooking.timeslot || 'N/A'}
-                </Typography>
-              </Grid>
               <Grid item xs={12}>
-                <Typography variant="subtitle2">{t('karts')}</Typography>
-                <Box sx={{ mt: 1 }}>
-                  {selectedBooking.kartSelections && selectedBooking.kartSelections.length > 0 
-                    ? selectedBooking.kartSelections.map((selection, index) => (
-                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body1">
-                            {selection.kart && typeof selection.kart === 'object' 
-                              ? `${selection.kart.name || 'Kart'} (${selection.quantity})` 
-                              : `Kart (${selection.quantity})`}
-                          </Typography>
-                          <Typography variant="body1">
-                            {selection.pricePerSlot} € x {selection.quantity}
-                          </Typography>
-                        </Box>
-                      ))
-                    : selectedBooking.karts && selectedBooking.karts.length > 0
-                      ? selectedBooking.karts.map((kart, index) => (
-                          <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="body1">
-                              {kart.name || 'Kart'} ({kart.type || 'unknown'})
-                            </Typography>
-                            <Typography variant="body1">
-                              {kart.pricePerSlot || 0} €
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>{t('timeslots_and_karts', 'Timeslots and Karts')}</Typography>
+                
+                {/* Display timeslots with karts */}
+                {selectedBooking.selectedTimeslots && selectedBooking.selectedTimeslots.length > 0 ? (
+                  selectedBooking.selectedTimeslots.map((timeslot, index) => {
+                    // Find karts for this specific timeslot
+                    const timeslotKarts = selectedBooking.kartSelections 
+                      ? selectedBooking.kartSelections.filter(selection => 
+                          selection.timeslot === timeslot
+                        )
+                      : [];
+                    
+                    console.log(`Admin view - Timeslot ${timeslot} has ${timeslotKarts.length} karts:`, timeslotKarts);
+                    
+                    return (
+                      <Card key={`timeslot-${index}`} sx={{ mb: 2, border: '1px solid #eee' }}>
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <AccessTimeIcon sx={{ mr: 2, color: 'primary.main' }} />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                              {timeslot}
                             </Typography>
                           </Box>
-                        ))
-                      : <Typography variant="body2">{t('no_karts_selected', 'No karts selected')}</Typography>
-                  }
-                </Box>
+                          
+                          <Divider sx={{ my: 1 }} />
+                          
+                          <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
+                            {t('karts_for_this_timeslot', 'Karts for this timeslot')}:
+                          </Typography>
+                          
+                          {/* Display karts for this timeslot */}
+                          {timeslotKarts.length > 0 ? (
+                            <List dense>
+                              {timeslotKarts.map((selection, kartIndex) => {
+                                const kartName = selection.kart && typeof selection.kart === 'object'
+                                  ? selection.kart.name || 'Kart'
+                                  : 'Kart';
+                                
+                                return (
+                                  <ListItem key={`kart-${kartIndex}`} sx={{ py: 0 }}>
+                                    <ListItemIcon sx={{ minWidth: 36 }}>
+                                      <DirectionsCarIcon fontSize="small" color="primary" />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                      primary={`${kartName} x ${selection.quantity}`}
+                                      secondary={`${selection.pricePerSlot} € x ${selection.quantity} = ${(selection.pricePerSlot * selection.quantity).toFixed(2)} €`}
+                                    />
+                                  </ListItem>
+                                );
+                              })}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              {t('no_karts_selected', 'No karts selected for this specific timeslot')}
+                            </Typography>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  // Legacy display for backward compatibility
+                  <Box>
+                    <Typography variant="subtitle2">{t('time')}</Typography>
+                    <Typography variant="body1" gutterBottom>
+                      {selectedBooking.startTime && selectedBooking.endTime 
+                        ? `${selectedBooking.startTime} - ${selectedBooking.endTime}` 
+                        : selectedBooking.timeslot || 'N/A'}
+                    </Typography>
+                    
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                      {t('karts_for_this_timeslot', 'Karts for this timeslot')}:
+                    </Typography>
+                    
+                    <Box sx={{ mt: 1 }}>
+                      {selectedBooking.kartSelections && selectedBooking.kartSelections.length > 0 
+                        ? selectedBooking.kartSelections.map((selection, index) => (
+                            <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                              <Typography variant="body1">
+                                {selection.kart && typeof selection.kart === 'object' 
+                                  ? `${selection.kart.name || 'Kart'} (${selection.quantity})` 
+                                  : `Kart (${selection.quantity})`}
+                              </Typography>
+                              <Typography variant="body1">
+                                {selection.pricePerSlot} € x {selection.quantity}
+                              </Typography>
+                            </Box>
+                          ))
+                        : selectedBooking.karts && selectedBooking.karts.length > 0
+                          ? selectedBooking.karts.map((kart, index) => (
+                              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                <Typography variant="body1">
+                                  {kart.name || 'Kart'} ({kart.type || 'unknown'})
+                                </Typography>
+                                <Typography variant="body1">
+                                  {kart.pricePerSlot || 0} €
+                                </Typography>
+                              </Box>
+                            ))
+                          : <Typography variant="body2">{t('no_karts_selected', 'No karts selected')}</Typography>
+                      }
+                    </Box>
+                  </Box>
+                )}
               </Grid>
               {selectedBooking.notes && (
                 <Grid item xs={12}>

@@ -109,6 +109,7 @@ const resources = {
       booking_confirmed_status: 'Broneering kinnitatud',
       booking_creation_failed: 'Broneeringu loomine ebaõnnestus: {{error}}',
       booking_created_successfully: 'Broneering edukalt loodud',
+      booking_reference: 'Broneeringu ID',
       customer_details: 'Kliendi andmed',
       create_booking: 'Loo broneering',
       booking_id: 'Broneeringu ID',
@@ -129,6 +130,12 @@ const resources = {
       additional_timeslot_selection_info: 'Saad muuta kardide valikut selle ajavahemiku jaoks.',
       clear_selection: 'Tühista valik',
       selected_timeslots_and_karts: 'Valitud ajavahemikud ja kardid',
+      proceed_to_details: 'Jätka andmetega',
+      karts_for_this_timeslot: 'Kardid selle ajavahemiku jaoks',
+      enter_your_details: 'Sinu andmed',
+      timeslots_and_karts: 'Sõitude ajad ja kardid',
+      return_home: 'Tagasi avalehele',
+      print_confirmation: 'Prindi kinnitus',
       
       // Kart related
       kart_name: 'Kardi nimi',
@@ -361,6 +368,7 @@ const resources = {
       booking_confirmed_status: 'Booking Confirmed',
       booking_creation_failed: 'Booking creation failed: {{error}}',
       booking_created_successfully: 'Booking successfully created',
+      booking_reference: 'Booking Reference',
       customer_details: 'Customer Details',
       create_booking: 'Create Booking',
       booking_id: 'Booking ID',
@@ -381,6 +389,10 @@ const resources = {
       additional_timeslot_selection_info: 'You can modify your kart selection for this timeslot.',
       clear_selection: 'Clear Selection',
       selected_timeslots_and_karts: 'Selected Timeslots and Karts',
+      proceed_to_details: 'Proceed to Details',
+      karts_for_this_timeslot: 'Karts for this Timeslot',
+      enter_your_details: 'Enter Your Details',
+      timeslots_and_karts: 'Timeslots and Karts',
       
       // Kart related
       kart_name: 'Kart Name',
